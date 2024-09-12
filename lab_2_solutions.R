@@ -1,3 +1,89 @@
+######################## dataset - 3 #####################
+
+protein_data <- read.csv("eur_protein_consump.csv")
+head(protein)
+
+na.omit(protein)
+countries <- protein$Country
+
+protein <- protein[, -1]
+protein <- scale(protein)
+
+pca <- prcomp(protein)
+summary(pca)
+biplot(pca)
+plot(pca)
+dim(pca$rotation)
+
+
+### variation
+var<- (pca$sdev)^2
+var1 <- var/sum(var)
+
+plot(var1, type = "b", main = "Scree Plot", 
+     xlab = "Principal Components", ylab = "Proportion of Variance Explained")
+
+
+#### calculating outliers 
+distance <- sqrt(rowSums(pca$x[, 1:3]^2))
+outliers <- which(distance > quantile(distance, 0.90))
+outliers
+protein_data[outliers,]
+plot(distance)
+
+### clustering k means
+set.seed(123)
+kmeans_cluster <- kmeans(pca$x[, 1:2], centers = 4, nstart = 25)
+fviz_cluster(kmeans_cluster, data = pca$x[, 1:2], geom = "point", 
+             ellipse.type = "convex", ggtheme = theme_minimal(), 
+             main = "Clusters of Countries in PCA Projection")
+
+cluster_centers <- aggregate(protein, by = list(cluster = kmeans_cluster$cluster), mean)
+print(cluster_centers)
+
+mean(kmeans_cluster$cluster ==1)
+
+
+
+###################################### dataset - 4 ############################
+bank_data <- read.csv("PS_bank_fin_ratio.csv")
+head(bank_data)
+
+na.omit(bank_data)
+bank_data <- bank_data[-1,]
+bank <- bank_data[, -1]
+for(i in 1 : ncol(bank)){
+  bank[, i] <- as.numeric(bank[,i])
+}
+bank <- scale(bank)
+str(bank)
+
+pca_res <- prcomp(bank)
+summary(pca_res)
+
+### calculting outliers
+distances <- sqrt(rowSums(pca_res$x[, 1:2]^2))
+outlier <- which(distances > quantile(distances, 0.99))
+bank_data[c(outlier),]
+plot(distances, pch = 16)
+
+
+#### clustering
+clusters <- kmeans(pca_res$x, centers = 4, nstart = 10)
+
+between <- function(data, cluster){
+  total_bet <- 0
+  for(i in unique(cluster)){
+    points <- data[cluster == i,]
+    centroid <- colMeans(points)
+    total_bet <- total_bet + sum(rowSums((points - centroid)^2))
+  }
+  return (total_bet)
+}
+between(bank, clusters$cluster)
+
+############################ dataset-1 ###################
+
 library(readr)
 library(ggplot2)
 eco_data <- read.csv("eco_dev_data.csv")
