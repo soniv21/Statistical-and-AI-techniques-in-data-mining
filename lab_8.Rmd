@@ -1,0 +1,37 @@
+---
+title: "Untitled"
+author: "Soni Verma"
+date: "2024-11-07"
+output: html_document
+---
+
+```{r}
+library(MASS)
+library(dplyr)
+setwd("C:/Users/91638/Downloads")
+wine_data <- read.csv("wine.csv")
+str(wine_data)
+new_data <- wine_data[1:130 ,1:14]
+sum(is.na(new_data))
+new_data$Type <- ifelse(new_data$Type == "A", 0, 1)
+new_data$Type <- as.factor(new_data$Type)
+```
+
+```{r}
+train <- new_data[1:(0.9*nrow(new_data)), ]
+test <- new_data[(0.9*nrow(new_data) +1):nrow(new_data),]
+lda <- lda(Type ~ ., train)
+qda <- qda(Type ~. , train)
+```
+
+```{r}
+#### misclassification probability
+predicted_test <- predict(lda, test)$class
+missclassification_prob <- mean(predicted_test != test$Type)
+cat("missclassification_prob_lda", missclassification_prob)
+
+pred_qda_test <- predict(qda,test)$class
+miss_prob <- mean(pred_qda_test != test$Type)
+cat("missclassification_prob_qda", miss_prob)
+
+```

@@ -1,0 +1,70 @@
+---
+title: "Untitled"
+author: "Soni Verma"
+date: "2024-11-06"
+output: html_document
+---
+
+```{r}
+library(arules)
+library(arulesViz)
+setwd("C:/Users/91638/Downloads")
+data <- read.transactions("grocery_baskets.csv", format = "basket", sep = ",")
+head(data)
+```
+
+```{r}
+# Calculate item frequencies
+item_frequencies <- itemFrequency(data, type = "absolute")
+
+# Sort and display top 25 items
+top_25_items <- sort(item_frequencies, decreasing = TRUE)[1:25]
+print(top_25_items)
+```
+
+Use Apriori Algorithm to Find Association Rules
+
+```{r}
+params <- list(
+  list(supp = 0.1, conf = 0.6),
+  list(supp = 0.01, conf = 0.2),
+  list(supp = 0.05, conf = 0.3),
+  list(supp = 0.5, conf = 0.7)
+)
+
+# Store the rules for each combination
+rules_list <- list()
+
+for (i in 1:length(params)) {
+  supp <- params[[i]]$supp
+  conf <- params[[i]]$conf
+  
+  # Generate association rules
+  rules <- apriori(data, parameter = list(supp = supp, conf = conf))
+  
+  # Store the rules in the list
+  rules_list[[i]] <- rules
+}
+```
+
+Calculate the Lift for Each Rule
+
+```{r}
+for (i in 1:length(rules_list)) {
+  cat("Rules for Support =", params[[i]]$supp, "and Confidence =", params[[i]]$conf, "\n")
+  
+  # Extract rules from the list
+  rules <- rules_list[[i]]
+  
+  # Display the rules with lift values
+  inspect(rules)
+  
+  # Print the lift values
+  lift_values <- quality(rules)$lift
+  print(lift_values)
+}
+```
+
+```{r}
+plot(rules_list[[1]], method = "graph", control = list(type = "items"))
+```
